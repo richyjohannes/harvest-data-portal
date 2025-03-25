@@ -48,10 +48,14 @@ export const generateChartData = (data: FoodProductionData): ChartData<'line'> =
       data: data.datasets[type],
       borderColor: CHART_COLORS[index % CHART_COLORS.length],
       backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
-      tension: 0.3,
-      borderWidth: 3,
-      pointRadius: 4,
-      pointHoverRadius: 6,
+      tension: 0.4,
+      borderWidth: 4,
+      pointRadius: 6,
+      pointHoverRadius: 10,
+      pointBorderWidth: 2,
+      pointBackgroundColor: 'white',
+      pointBorderColor: CHART_COLORS[index % CHART_COLORS.length],
+      fill: false,
     })),
   };
 };
@@ -60,7 +64,7 @@ export const chartOptions: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false,
   animation: {
-    duration: 1000,
+    duration: 1200,
     easing: 'easeOutQuart',
   },
   scales: {
@@ -70,15 +74,22 @@ export const chartOptions: ChartOptions<'line'> = {
         display: true,
         text: 'Produksi (dalam 1000 MT)',
         font: {
-          size: 14,
-          weight: 500, // Changed from '500' to 500
+          size: 16,
+          weight: 500,
         },
         padding: {
-          bottom: 10,
+          bottom: 15,
         },
       },
       grid: {
-        color: 'rgba(0, 0, 0, 0.06)',
+        color: 'rgba(0, 0, 0, 0.05)',
+        drawBorder: false,
+      },
+      ticks: {
+        font: {
+          size: 14,
+        },
+        padding: 10,
       },
     },
     x: {
@@ -86,61 +97,81 @@ export const chartOptions: ChartOptions<'line'> = {
         display: true,
         text: 'Tahun',
         font: {
-          size: 14,
-          weight: 500, // Changed from '500' to 500
+          size: 16,
+          weight: 500,
         },
         padding: {
-          top: 10,
+          top: 15,
         },
       },
       grid: {
         display: false,
+        drawBorder: false,
+      },
+      ticks: {
+        font: {
+          size: 14,
+        },
+        padding: 10,
       },
     },
   },
   plugins: {
     legend: {
       position: 'top',
+      align: 'center',
       labels: {
         usePointStyle: true,
-        boxWidth: 6,
-        padding: 20,
+        boxWidth: 8,
+        boxHeight: 8,
+        padding: 25,
+        font: {
+          size: 14,
+        },
       },
     },
     title: {
       display: true,
       text: 'Produksi Pangan China',
       font: {
-        size: 18,
-        weight: 600, // Changed from '600' to 600
+        size: 22,
+        weight: 600,
       },
       padding: {
-        top: 10,
-        bottom: 30,
+        top: 20,
+        bottom: 40,
       },
+      color: '#333',
     },
     tooltip: {
-      backgroundColor: 'rgba(255, 255, 255, 0.8)',
-      titleColor: '#000',
-      bodyColor: '#000',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      titleColor: '#333',
+      bodyColor: '#333',
+      titleFont: {
+        size: 16,
+        weight: 600,
+      },
       bodyFont: {
-        weight: 500, // Changed from '500' to 500
+        size: 14,
+        weight: 500,
       },
       borderColor: 'rgba(0, 0, 0, 0.1)',
       borderWidth: 1,
-      padding: 12,
-      boxPadding: 6,
+      padding: 16,
+      boxPadding: 8,
       usePointStyle: true,
       callbacks: {
         label: function(context) {
           return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} (1000 MT)`;
         }
-      }
+      },
+      cornerRadius: 8,
     },
   },
   elements: {
     line: {
       borderJoinStyle: 'round',
+      capBezierPoints: true,
     },
   },
   interaction: {
@@ -149,10 +180,13 @@ export const chartOptions: ChartOptions<'line'> = {
   },
   layout: {
     padding: {
-      left: 10,
-      right: 20,
-      top: 20,
-      bottom: 10,
+      left: 15,
+      right: 25,
+      top: 25,
+      bottom: 15,
     },
+  },
+  hover: {
+    animationDuration: 150,
   },
 };

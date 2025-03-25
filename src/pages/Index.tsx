@@ -13,11 +13,11 @@ const Index = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <header className="py-8 md:py-12">
+      <header className="py-10 md:py-14">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="micro-tag mb-2">Data Visualization</div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 text-gray-900">
+            <div className="micro-tag mb-3">Data Visualization</div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-gray-900">
               Produksi Pangan China
             </h1>
             <p className="text-gray-600 text-lg md:text-xl">
@@ -27,14 +27,16 @@ const Index = () => {
         </div>
       </header>
       
-      <main className="container mx-auto px-4 pb-16">
-        <div className="grid grid-cols-1 gap-8">
+      <main className="container mx-auto px-4 pb-20">
+        <div className="grid grid-cols-1 gap-12">
           <DataInputForm 
             data={data} 
             onDataChange={handleDataChange} 
           />
           
-          <ProductionChart data={data} />
+          <div className="w-full max-w-7xl mx-auto">
+            <ProductionChart data={data} />
+          </div>
         </div>
       </main>
       

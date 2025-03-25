@@ -59,25 +59,25 @@ const ProductionChart: React.FC<ProductionChartProps> = ({ data }) => {
   };
 
   return (
-    <div className="chart-container glass-panel p-4 md:p-6 animate-scale-in">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Visualisasi Data</h2>
-          <p className="text-sm text-gray-500">Grafik produksi pangan China</p>
+    <div className="chart-container glass-panel p-4 md:p-8 animate-scale-in">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <div className="mb-4 md:mb-0">
+          <h2 className="text-2xl font-bold text-gray-800">Visualisasi Data</h2>
+          <p className="text-md text-gray-600">Grafik produksi pangan China</p>
         </div>
         <button
           onClick={downloadChart}
-          className="btn-secondary flex items-center gap-2 text-sm"
+          className="btn-primary flex items-center gap-2 px-5 py-3 rounded-xl text-sm shadow-md hover:shadow-lg transition-all"
         >
-          <Download size={16} />
+          <Download size={18} />
           <span>Unduh Grafik</span>
         </button>
       </div>
       
       <div 
         ref={chartRef} 
-        className="bg-white rounded-lg p-4 shadow-sm"
-        style={{ height: '400px' }}
+        className="bg-white rounded-xl p-6 shadow-lg"
+        style={{ height: '600px' }}
       >
         <Line data={chartData} options={chartOptions} />
       </div>

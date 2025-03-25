@@ -83,7 +83,7 @@ export const chartOptions: ChartOptions<'line'> = {
       },
       grid: {
         color: 'rgba(0, 0, 0, 0.05)',
-        drawBorder: false,
+        // Removing drawBorder as it's not a valid property
       },
       ticks: {
         font: {
@@ -106,7 +106,7 @@ export const chartOptions: ChartOptions<'line'> = {
       },
       grid: {
         display: false,
-        drawBorder: false,
+        // Removing drawBorder as it's not a valid property
       },
       ticks: {
         font: {
@@ -149,7 +149,7 @@ export const chartOptions: ChartOptions<'line'> = {
       bodyColor: '#333',
       titleFont: {
         size: 16,
-        weight: 600,
+        weight: 500,
       },
       bodyFont: {
         size: 14,
@@ -177,6 +177,7 @@ export const chartOptions: ChartOptions<'line'> = {
   interaction: {
     mode: 'index',
     intersect: false,
+    // Removing animationDuration as it's not a valid property here
   },
   layout: {
     padding: {
@@ -186,7 +187,9 @@ export const chartOptions: ChartOptions<'line'> = {
       bottom: 15,
     },
   },
+  // Moving hover configuration to the correct location
   hover: {
-    animationDuration: 150,
+    mode: 'nearest',
+    intersect: false,
   },
 };

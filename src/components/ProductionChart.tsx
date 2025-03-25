@@ -11,10 +11,10 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { FoodProductionData, generateChartData, chartOptions } from '@/utils/chartUtils';
+import { FoodProductionData, generateChartData, chartOptions, DataConfig } from '@/utils/chartUtils';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
-import { Download } from 'lucide-react';
+import { Download, TrendingUp } from 'lucide-react';
 
 // Register ChartJS components
 ChartJS.register(
@@ -29,9 +29,10 @@ ChartJS.register(
 
 interface ProductionChartProps {
   data: FoodProductionData;
+  config: DataConfig;
 }
 
-const ProductionChart: React.FC<ProductionChartProps> = ({ data }) => {
+const ProductionChart: React.FC<ProductionChartProps> = ({ data, config }) => {
   const chartRef = useRef<HTMLDivElement>(null);
 
   const chartData = generateChartData(data);
@@ -47,7 +48,7 @@ const ProductionChart: React.FC<ProductionChartProps> = ({ data }) => {
       });
       
       const link = document.createElement('a');
-      link.download = `produksi-pangan-china-${new Date().toISOString().split('T')[0]}.png`;
+      link.download = `${config.type.toLowerCase()}-pangan-${config.country.toLowerCase()}-${new Date().toISOString().split('T')[0]}.png`;
       link.href = dataUrl;
       link.click();
       
@@ -59,15 +60,18 @@ const ProductionChart: React.FC<ProductionChartProps> = ({ data }) => {
   };
 
   return (
-    <div className="chart-container glass-panel p-4 md:p-8 animate-scale-in">
+    <div className="bg-white shadow-lg rounded-xl p-6 animate-scale-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div className="mb-4 md:mb-0">
-          <h2 className="text-2xl font-bold text-gray-800">Visualisasi Data</h2>
-          <p className="text-md text-gray-600">Grafik produksi pangan China</p>
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <TrendingUp className="text-indigo-600" />
+            Visualisasi Data
+          </h2>
+          <p className="text-md text-gray-600">{config.type} pangan {config.country}</p>
         </div>
         <button
           onClick={downloadChart}
-          className="btn-primary flex items-center gap-2 px-5 py-3 rounded-xl text-sm shadow-md hover:shadow-lg transition-all"
+          className="btn-primary flex items-center gap-2 px-5 py-3 rounded-xl text-sm shadow-md hover:shadow-lg transition-all bg-indigo-600 hover:bg-indigo-700"
         >
           <Download size={18} />
           <span>Unduh Grafik</span>
@@ -76,10 +80,10 @@ const ProductionChart: React.FC<ProductionChartProps> = ({ data }) => {
       
       <div 
         ref={chartRef} 
-        className="bg-white rounded-xl p-6 shadow-lg"
-        style={{ height: '600px' }}
+        className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+        style={{ height: '700px' }}
       >
-        <Line data={chartData} options={chartOptions} />
+        <Line data={chartData} options={chartOptions(config)} />
       </div>
     </div>
   );

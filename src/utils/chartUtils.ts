@@ -8,6 +8,11 @@ export interface FoodProductionData {
   };
 }
 
+export interface DataConfig {
+  type: 'Produksi' | 'Impor' | 'Konsumsi';
+  country: string;
+}
+
 export const FOOD_TYPES = [
   'Jagung',
   'Bungkil Kedelai',
@@ -16,6 +21,22 @@ export const FOOD_TYPES = [
   'Beras',
   'Gandum',
   'Sorghum'
+];
+
+export const COUNTRIES = [
+  'China',
+  'Indonesia',
+  'India',
+  'Amerika Serikat',
+  'Brazil',
+  'Rusia',
+  'Jepang'
+];
+
+export const DATA_TYPES = [
+  'Produksi',
+  'Impor',
+  'Konsumsi'
 ];
 
 export const CHART_COLORS = [
@@ -40,6 +61,17 @@ export const getInitialData = (): FoodProductionData => {
   return { years, datasets };
 };
 
+export const getInitialConfig = (): DataConfig => {
+  return {
+    type: 'Produksi',
+    country: 'China'
+  };
+};
+
+export const generateChartTitle = (config: DataConfig): string => {
+  return `${config.type} Pangan ${config.country}`;
+};
+
 export const generateChartData = (data: FoodProductionData): ChartData<'line'> => {
   return {
     labels: data.years.map(year => year.toString()),
@@ -50,8 +82,8 @@ export const generateChartData = (data: FoodProductionData): ChartData<'line'> =
       backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
       tension: 0.4,
       borderWidth: 4,
-      pointRadius: 6,
-      pointHoverRadius: 10,
+      pointRadius: 7,
+      pointHoverRadius: 12,
       pointBorderWidth: 2,
       pointBackgroundColor: 'white',
       pointBorderColor: CHART_COLORS[index % CHART_COLORS.length],
@@ -60,7 +92,7 @@ export const generateChartData = (data: FoodProductionData): ChartData<'line'> =
   };
 };
 
-export const chartOptions: ChartOptions<'line'> = {
+export const chartOptions = (config: DataConfig): ChartOptions<'line'> => ({
   responsive: true,
   maintainAspectRatio: false,
   animation: {
@@ -72,7 +104,7 @@ export const chartOptions: ChartOptions<'line'> = {
       beginAtZero: true,
       title: {
         display: true,
-        text: 'Produksi (dalam 1000 MT)',
+        text: `${config.type} (dalam 1000 MT)`,
         font: {
           size: 16,
           weight: 500,
@@ -132,9 +164,9 @@ export const chartOptions: ChartOptions<'line'> = {
     },
     title: {
       display: true,
-      text: 'Produksi Pangan China',
+      text: generateChartTitle(config),
       font: {
-        size: 22,
+        size: 26,
         weight: 600,
       },
       padding: {
@@ -192,4 +224,30 @@ export const chartOptions: ChartOptions<'line'> = {
     mode: 'nearest',
     intersect: false,
   },
+});
+
+export const researchData = (): FoodProductionData => {
+  // Fungsi untuk melakukan riset data (menghasilkan data acak yang masuk akal)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
+  
+  const generateRealisticTrend = (baseValue: number, volatility: number) => {
+    return years.map((_, i) => {
+      const trend = baseValue * (1 + (i * 0.05)); // 5% pertumbuhan per tahun
+      const randomFactor = (Math.random() - 0.5) * volatility; // Faktor acak dengan volatilitas tertentu
+      return Math.round(trend * (1 + randomFactor));
+    });
+  };
+  
+  const datasets: { [key: string]: number[] } = {
+    "Jagung": generateRealisticTrend(260000, 0.05),
+    "Bungkil Kedelai": generateRealisticTrend(72000, 0.08),
+    "Biji Minyak Kedelai": generateRealisticTrend(18000, 0.1),
+    "Minyak Kedelai": generateRealisticTrend(16000, 0.07),
+    "Beras": generateRealisticTrend(148000, 0.02),
+    "Gandum": generateRealisticTrend(134000, 0.03),
+    "Sorghum": generateRealisticTrend(3000, 0.12)
+  };
+  
+  return { years, datasets };
 };

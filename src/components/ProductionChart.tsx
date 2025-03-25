@@ -60,28 +60,28 @@ const ProductionChart: React.FC<ProductionChartProps> = ({ data, config }) => {
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-xl p-6 animate-scale-in">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <div className="mb-4 md:mb-0">
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <TrendingUp className="text-indigo-600" />
+    <div className="bg-white shadow-md rounded-xl p-4 animate-scale-in">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+        <div className="mb-3 md:mb-0">
+          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-1.5">
+            <TrendingUp className="text-indigo-600" size={18} />
             Visualisasi Data
           </h2>
-          <p className="text-md text-gray-600">{config.type} pangan {config.country}</p>
+          <p className="text-sm text-gray-600">{config.type} pangan {config.country}</p>
         </div>
         <button
           onClick={downloadChart}
-          className="btn-primary flex items-center gap-2 px-5 py-3 rounded-xl text-sm shadow-md hover:shadow-lg transition-all bg-indigo-600 hover:bg-indigo-700"
+          className="btn-primary flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs shadow-sm hover:shadow-md transition-all bg-indigo-600 hover:bg-indigo-700"
         >
-          <Download size={18} />
+          <Download size={14} />
           <span>Unduh Grafik</span>
         </button>
       </div>
       
       <div 
         ref={chartRef} 
-        className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
-        style={{ height: '800px' }} // Increased height
+        className="bg-white rounded-lg p-3 shadow-sm border border-gray-100"
+        style={{ height: '850px' }} // Increased height further
       >
         <Line data={chartData} options={chartOptions(config)} />
       </div>

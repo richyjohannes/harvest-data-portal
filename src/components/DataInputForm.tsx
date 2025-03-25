@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { FoodProductionData, FOOD_TYPES, DATA_TYPES, COUNTRIES, DataConfig, researchData } from '@/utils/chartUtils';
 import { toast } from 'sonner';
-import { PlusCircle, MinusCircle, Save, RefreshCw, Database, FileSpreadsheet, Beaker } from 'lucide-react';
+import { PlusCircle, MinusCircle, Save, RefreshCw, Database, FileSpreadsheet, Beaker, ClipboardPaste } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface DataInputFormProps {
@@ -17,6 +17,9 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
   const [yearCount, setYearCount] = useState<number>(data.years.length);
   const [tempData, setTempData] = useState<FoodProductionData>(data);
   const [tempConfig, setTempConfig] = useState<DataConfig>(config);
+  const [pasteModalOpen, setPasteModalOpen] = useState<boolean>(false);
+  const [selectedFoodType, setSelectedFoodType] = useState<string>('');
+  const [pasteContent, setPasteContent] = useState<string>('');
   
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -99,6 +102,58 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
     setStartYear(researchedData.years[0]);
     setYearCount(researchedData.years.length);
     toast.success("Data hasil riset berhasil dimuat!");
+  };
+
+  // New function to handle pasting Excel data into a specific food type row
+  const handleExcelPaste = (e: React.ClipboardEvent, foodType: string) => {
+    e.preventDefault();
+    const clipboardData = e.clipboardData.getData('text');
+    processPastedData(clipboardData, foodType);
+  };
+
+  // Process the pasted data
+  const processPastedData = (pasteData: string, foodType: string) => {
+    // Split by tabs, spaces, or newlines to get individual values
+    const values = pasteData.split(/[\t\s\n]+/).filter(val => val.trim() !== '');
+    
+    if (values.length === 0) {
+      toast.error("Tidak ada data yang valid untuk ditempel");
+      return;
+    }
+
+    // Create a new dataset for the specific food type
+    const newDatasets = { ...tempData.datasets };
+    const newValues = [...tempData.datasets[foodType]];
+    
+    // Update as many values as we have available (limited by the current number of years)
+    const valuesToUpdate = Math.min(values.length, tempData.years.length);
+    
+    for (let i = 0; i < valuesToUpdate; i++) {
+      const parsedValue = parseFloat(values[i].replace(',', '.'));
+      if (!isNaN(parsedValue)) {
+        newValues[i] = parsedValue;
+      }
+    }
+    
+    newDatasets[foodType] = newValues;
+    setTempData({ ...tempData, datasets: newDatasets });
+    
+    toast.success(`Data ${foodType} berhasil ditempel untuk ${valuesToUpdate} tahun`);
+  };
+
+  // Function to handle bulk paste functionality via a modal
+  const openPasteModal = (foodType: string) => {
+    setSelectedFoodType(foodType);
+    setPasteContent('');
+    setPasteModalOpen(true);
+  };
+
+  // Process pasted content from the modal
+  const handlePasteFromModal = () => {
+    if (!pasteContent.trim() || !selectedFoodType) return;
+    
+    processPastedData(pasteContent, selectedFoodType);
+    setPasteModalOpen(false);
   };
 
   return (
@@ -207,6 +262,9 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
               <FileSpreadsheet size={16} className="text-gray-600" />
               <span className="font-medium text-sm text-gray-700">Data {tempConfig.type}</span>
             </div>
+            <div className="text-xs text-gray-500 italic">
+              Tip: Klik ikon clipboard pada baris untuk paste data Excel
+            </div>
           </div>
           
           <div className="overflow-x-auto">
@@ -227,18 +285,31 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
                 {FOOD_TYPES.map((foodType, index) => (
                   <tr key={foodType} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                     <td className="p-3 font-medium border-r border-gray-100">
-                      <div 
-                        className="px-2 py-1 rounded text-xs font-medium"
-                        style={{ 
-                          backgroundColor: `rgba(${index * 40}, ${100 + index * 20}, ${200 - index * 10}, 0.1)`,
-                          color: `rgba(${index * 40}, ${100 + index * 20}, ${200 - index * 10}, 1)`
-                        }}
-                      >
-                        {foodType}
+                      <div className="flex items-center justify-between">
+                        <div 
+                          className="px-2 py-1 rounded text-xs font-medium"
+                          style={{ 
+                            backgroundColor: `rgba(${index * 40}, ${100 + index * 20}, ${200 - index * 10}, 0.1)`,
+                            color: `rgba(${index * 40}, ${100 + index * 20}, ${200 - index * 10}, 1)`
+                          }}
+                        >
+                          {foodType}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openPasteModal(foodType)}
+                          className="p-1 text-gray-500 hover:text-indigo-600 transition-colors"
+                          title={`Paste data Excel untuk ${foodType}`}
+                        >
+                          <ClipboardPaste size={14} />
+                        </button>
                       </div>
                     </td>
                     {tempData.years.map((year, yearIndex) => (
-                      <td key={`${foodType}-${year}`} className="p-1 border-r border-gray-100 text-center">
+                      <td 
+                        key={`${foodType}-${year}`} 
+                        className="p-1 border-r border-gray-100 text-center"
+                      >
                         <input
                           type="number"
                           value={tempData.datasets[foodType][yearIndex] || ''}
@@ -246,6 +317,7 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
                           className="w-full text-center px-2 py-2 border-0 bg-transparent focus:ring-0 focus:outline-none"
                           min="0"
                           placeholder="0"
+                          onPaste={(e) => handleExcelPaste(e, foodType)}
                         />
                       </td>
                     ))}
@@ -275,6 +347,45 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
           </button>
         </div>
       </form>
+
+      {/* Paste Modal */}
+      {pasteModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-2">Paste Data Excel</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Paste data dari Excel untuk {selectedFoodType}. Setiap nilai akan dimasukkan sesuai urutan tahun.
+            </p>
+            <textarea 
+              className="w-full border rounded-md p-2 mb-4 h-32 font-mono text-sm"
+              placeholder="Paste data disini (misalnya: 100 200 300 atau 100&#9;200&#9;300)"
+              value={pasteContent}
+              onChange={(e) => setPasteContent(e.target.value)}
+              onPaste={(e) => {
+                const clipText = e.clipboardData.getData('text');
+                setPasteContent(clipText);
+                e.preventDefault();
+              }}
+            />
+            <div className="flex justify-end gap-2">
+              <button 
+                type="button"
+                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
+                onClick={() => setPasteModalOpen(false)}
+              >
+                Batal
+              </button>
+              <button 
+                type="button"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                onClick={handlePasteFromModal}
+              >
+                Tempel Data
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -33,7 +33,7 @@ const Index = () => {
       </header>
       
       <main className="container mx-auto px-4 pb-20">
-        <div className="grid grid-cols-1 gap-12">
+        <div className="grid grid-cols-1 gap-16"> {/* Increased gap */}
           <DataInputForm 
             data={data} 
             config={config}

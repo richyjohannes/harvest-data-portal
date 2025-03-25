@@ -71,7 +71,7 @@ export const chartOptions: ChartOptions<'line'> = {
         text: 'Produksi (dalam 1000 MT)',
         font: {
           size: 14,
-          weight: '500',
+          weight: 500, // Changed from '500' to 500
         },
         padding: {
           bottom: 10,
@@ -87,7 +87,7 @@ export const chartOptions: ChartOptions<'line'> = {
         text: 'Tahun',
         font: {
           size: 14,
-          weight: '500',
+          weight: 500, // Changed from '500' to 500
         },
         padding: {
           top: 10,
@@ -112,7 +112,7 @@ export const chartOptions: ChartOptions<'line'> = {
       text: 'Produksi Pangan China',
       font: {
         size: 18,
-        weight: '600',
+        weight: 600, // Changed from '600' to 600
       },
       padding: {
         top: 10,
@@ -124,7 +124,7 @@ export const chartOptions: ChartOptions<'line'> = {
       titleColor: '#000',
       bodyColor: '#000',
       bodyFont: {
-        weight: '500',
+        weight: 500, // Changed from '500' to 500
       },
       borderColor: 'rgba(0, 0, 0, 0.1)',
       borderWidth: 1,

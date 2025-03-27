@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { FoodProductionData, FOOD_TYPES, DATA_TYPES, COUNTRIES, DataConfig, researchData } from '@/utils/chartUtils';
 import { toast } from 'sonner';
-import { PlusCircle, MinusCircle, Save, RefreshCw, Database, FileSpreadsheet, Beaker, ClipboardPaste } from 'lucide-react';
+import { PlusCircle, MinusCircle, Save, RefreshCw, Beaker, ClipboardPaste, HelpCircle, Info } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface DataInputFormProps {
   data: FoodProductionData;
@@ -19,6 +21,7 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
   const [pasteModalOpen, setPasteModalOpen] = useState<boolean>(false);
   const [selectedFoodType, setSelectedFoodType] = useState<string>('');
   const [pasteContent, setPasteContent] = useState<string>('');
+  const tableRef = useRef<HTMLTableElement>(null);
   
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -95,7 +98,8 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
   };
   
   const handleResearchData = () => {
-    const researchedData = researchData();
+    // Use the default values (2010 with 14 years)
+    const researchedData = researchData(2010, 14);
     setTempData(researchedData);
     setStartYear(researchedData.years[0]);
     setYearCount(researchedData.years.length);
@@ -109,7 +113,21 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
   };
 
   const processPastedData = (pasteData: string, foodType: string) => {
-    const values = pasteData.split(/[\t\s\n]+/).filter(val => val.trim() !== '');
+    const rows = pasteData.split(/[\n\r]+/).map(row => row.trim()).filter(row => row);
+    
+    if (rows.length === 0) {
+      toast.error("Tidak ada data yang valid untuk ditempel");
+      return;
+    }
+
+    // Handle multi-row paste (matrix)
+    if (rows.length > 1) {
+      handleMatrixPaste(rows);
+      return;
+    }
+
+    // Handle single row paste
+    const values = rows[0].split(/[\t\s]+/).filter(val => val.trim() !== '');
     
     if (values.length === 0) {
       toast.error("Tidak ada data yang valid untuk ditempel");
@@ -136,6 +154,35 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
     toast.success(`Data ${foodType} berhasil ditempel untuk ${valuesToUpdate} tahun`);
   };
 
+  const handleMatrixPaste = (rows: string[]) => {
+    // Determine if we have enough food types to handle all rows
+    const validRowCount = Math.min(rows.length, FOOD_TYPES.length);
+    
+    const newDatasets = { ...tempData.datasets };
+    
+    for (let rowIndex = 0; rowIndex < validRowCount; rowIndex++) {
+      const foodType = FOOD_TYPES[rowIndex];
+      const values = rows[rowIndex].split(/[\t\s]+/).filter(val => val.trim() !== '');
+      const newValues = [...tempData.datasets[foodType]];
+      
+      const valuesToUpdate = Math.min(values.length, tempData.years.length);
+      
+      for (let i = 0; i < valuesToUpdate; i++) {
+        const cleanValue = values[i].replace(/[^\d]/g, '');
+        const parsedValue = parseInt(cleanValue, 10);
+        
+        if (!isNaN(parsedValue)) {
+          newValues[i] = parsedValue;
+        }
+      }
+      
+      newDatasets[foodType] = newValues;
+    }
+    
+    setTempData({ ...tempData, datasets: newDatasets });
+    toast.success(`Data matrix berhasil ditempel untuk ${validRowCount} jenis pangan`);
+  };
+
   const openPasteModal = (foodType: string) => {
     setSelectedFoodType(foodType);
     setPasteContent('');
@@ -149,21 +196,63 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
     setPasteModalOpen(false);
   };
 
+  // Handler for direct table paste
+  const handleTablePaste = (e: React.ClipboardEvent) => {
+    if (!tableRef.current) return;
+    
+    e.preventDefault();
+    const clipboardData = e.clipboardData.getData('text');
+    const rows = clipboardData.split(/[\n\r]+/).map(row => row.trim()).filter(row => row);
+    
+    if (rows.length === 0) return;
+    
+    handleMatrixPaste(rows);
+  };
+
   return (
-    <div className="bg-white shadow-md rounded-xl p-4 animate-slide-in">
+    <div className="bg-white shadow-lg rounded-xl p-5 animate-slide-in border border-indigo-100">
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">Konfigurasi Data</h2>
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1.5">
+              <Info size={18} className="text-indigo-600" />
+              Konfigurasi Data
+            </h2>
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleResearchData}
-                className="btn-secondary text-xs flex items-center gap-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2 py-1 rounded-md"
-              >
-                <Beaker size={14} />
-                <span>Riset Data</span>
-              </button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={handleResearchData}
+                      className="btn-secondary text-xs flex items-center gap-1 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white hover:from-indigo-600 hover:to-indigo-700 px-3 py-1.5 rounded-md shadow-sm transition-all duration-200"
+                    >
+                      <Beaker size={14} />
+                      <span>Riset Data</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Reset data dan hasilkan data sampel riset</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-xs flex items-center gap-1 text-indigo-600 hover:text-indigo-700 px-2 py-1 rounded-md"
+                      onClick={() => document.querySelector('[data-value="tutorial"]')?.dispatchEvent(new MouseEvent('click'))}
+                    >
+                      <HelpCircle size={14} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Lihat tutorial</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
           
@@ -250,34 +339,48 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
         </div>
         
         <div className="bg-white border border-gray-100 rounded-lg overflow-hidden mb-4 shadow-sm">
-          <div className="p-2 bg-gray-50 border-b flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <FileSpreadsheet size={14} className="text-gray-600" />
+          <div className="p-2 bg-gradient-to-r from-indigo-50 to-blue-50 flex items-center justify-between border-b">
+            <div className="flex items-center gap-1.5">
+              <ClipboardPaste size={14} className="text-indigo-600" />
               <span className="font-medium text-xs text-gray-700">Data {tempConfig.type}</span>
             </div>
-            <div className="text-xs text-gray-500 italic">
-              <span className="text-xs">Klik ikon clipboard untuk paste data Excel (decimal akan dihilangkan)</span>
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="text-xs text-indigo-600 cursor-help flex items-center gap-1">
+                    <span className="text-xs italic">Copy-paste Excel</span>
+                    <Info size={12} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-xs">Paste langsung ke tabel untuk multi-row, atau klik ikon clipboard untuk satu baris. Semua decimal dan karakter non-angka akan dihilangkan.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse min-w-full text-sm">
+            <table 
+              ref={tableRef} 
+              className="w-full border-collapse min-w-full text-sm"
+              onPaste={handleTablePaste}
+            >
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="text-left p-2 text-gray-600 font-medium border-r border-gray-100 text-xs">
+                  <th className="text-left p-2 text-gray-600 font-medium border-r border-gray-100 text-xs sticky left-0 bg-gray-50 z-10 whitespace-nowrap">
                     Jenis Produksi
                   </th>
                   {tempData.years.map(year => (
-                    <th key={year} className="p-1 text-gray-600 font-medium border-r border-gray-100 min-w-16 text-center text-xs">
+                    <th key={year} className="p-1 text-gray-600 font-medium border-r border-gray-100 min-w-12 text-center text-xs">
                       {year}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-100">
                 {FOOD_TYPES.map((foodType, index) => (
-                  <tr key={foodType} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                    <td className="p-2 font-medium border-r border-gray-100 text-xs">
+                  <tr key={foodType} className="hover:bg-indigo-50/30 transition-colors">
+                    <td className="p-1.5 font-medium border-r border-gray-100 text-xs sticky left-0 bg-white z-10 whitespace-nowrap">
                       <div className="flex items-center justify-between">
                         <div 
                           className="px-1.5 py-0.5 rounded text-xs font-medium"
@@ -288,33 +391,38 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
                         >
                           {foodType}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => openPasteModal(foodType)}
-                          className="p-1 text-gray-500 hover:text-indigo-600 transition-colors"
-                          title={`Paste data Excel untuk ${foodType}`}
-                        >
-                          <ClipboardPaste size={12} />
-                        </button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => openPasteModal(foodType)}
+                                className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                title={`Paste data Excel untuk ${foodType}`}
+                              >
+                                <ClipboardPaste size={12} />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              <p className="text-xs">Paste data Excel untuk {foodType}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </td>
                     {tempData.years.map((year, yearIndex) => (
                       <td 
                         key={`${foodType}-${year}`} 
-                        className="p-0 border-r border-gray-100 text-center"
+                        className="p-0 border-r border-gray-100 text-center relative group"
                       >
                         <input
                           type="text"
                           value={tempData.datasets[foodType][yearIndex] || ''}
                           onChange={e => handleProductionChange(foodType, yearIndex, e.target.value)}
-                          className="w-full text-center px-1 py-1.5 border-0 bg-transparent focus:ring-0 focus:outline-none text-xs"
+                          className="w-full text-center px-1 py-1 border-0 bg-transparent focus:ring-1 focus:ring-indigo-300 focus:outline-none text-xs group-hover:bg-indigo-50/50"
                           min="0"
                           placeholder="0"
-                          onPaste={(e) => {
-                            e.preventDefault();
-                            const clipboardData = e.clipboardData.getData('text');
-                            processPastedData(clipboardData, foodType);
-                          }}
+                          onPaste={(e) => handleExcelPaste(e, foodType)}
                         />
                       </td>
                     ))}
@@ -329,7 +437,7 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
           <button
             type="button"
             onClick={handleResetForm}
-            className="btn-secondary flex items-center gap-1 text-xs px-3 py-1.5"
+            className="btn-secondary flex items-center gap-1 text-xs px-3 py-1.5 border border-gray-200 hover:bg-gray-50"
           >
             <RefreshCw size={14} />
             <span>Reset</span>
@@ -337,7 +445,7 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
           
           <button
             type="submit"
-            className="btn-primary flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-xs px-3 py-1.5"
+            className="btn-primary flex items-center gap-1 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-xs px-3 py-1.5 shadow-sm"
           >
             <Save size={14} />
             <span>Simpan & Perbarui Grafik</span>
@@ -346,14 +454,17 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
       </form>
 
       {pasteModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-4 max-w-md w-full">
-            <h3 className="text-sm font-semibold mb-2">Paste Data Excel</h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl p-5 max-w-md w-full border border-indigo-100 animate-scale-in">
+            <h3 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+              <ClipboardPaste size={16} className="text-indigo-600" />
+              Paste Data Excel
+            </h3>
             <p className="text-xs text-gray-600 mb-3">
               Paste data dari Excel untuk {selectedFoodType}. Decimal dan karakter non-angka akan dihilangkan otomatis.
             </p>
             <textarea 
-              className="w-full border rounded-md p-2 mb-3 h-24 font-mono text-xs"
+              className="w-full border rounded-md p-2 mb-3 h-24 font-mono text-xs focus:ring-indigo-300 focus:border-indigo-300 focus:outline-none"
               placeholder="Paste data disini (misalnya: 100.5 200.7 300.9 atau 100,5&#9;200,7&#9;300,9)"
               value={pasteContent}
               onChange={(e) => setPasteContent(e.target.value)}
@@ -362,6 +473,7 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
                 setPasteContent(clipText);
                 e.preventDefault();
               }}
+              autoFocus
             />
             <div className="flex justify-end gap-2">
               <button 

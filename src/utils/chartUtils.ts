@@ -49,9 +49,8 @@ export const CHART_COLORS = [
   'rgb(54, 235, 235)', // cyan
 ];
 
-export const getInitialData = (): FoodProductionData => {
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
+export const getInitialData = (startYear: number = 2010, count: number = 14): FoodProductionData => {
+  const years = Array.from({ length: count }, (_, i) => startYear + i);
   
   const datasets: { [key: string]: number[] } = {};
   FOOD_TYPES.forEach(type => {
@@ -81,9 +80,9 @@ export const generateChartData = (data: FoodProductionData): ChartData<'line'> =
       borderColor: CHART_COLORS[index % CHART_COLORS.length],
       backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
       tension: 0.4,
-      borderWidth: 4,
-      pointRadius: 7,
-      pointHoverRadius: 12,
+      borderWidth: 3,
+      pointRadius: 6,
+      pointHoverRadius: 10,
       pointBorderWidth: 2,
       pointBackgroundColor: 'white',
       pointBorderColor: CHART_COLORS[index % CHART_COLORS.length],
@@ -115,7 +114,6 @@ export const chartOptions = (config: DataConfig): ChartOptions<'line'> => ({
       },
       grid: {
         color: 'rgba(0, 0, 0, 0.05)',
-        // Removing drawBorder as it's not a valid property
       },
       ticks: {
         font: {
@@ -138,7 +136,6 @@ export const chartOptions = (config: DataConfig): ChartOptions<'line'> => ({
       },
       grid: {
         display: false,
-        // Removing drawBorder as it's not a valid property
       },
       ticks: {
         font: {
@@ -166,12 +163,12 @@ export const chartOptions = (config: DataConfig): ChartOptions<'line'> => ({
       display: true,
       text: generateChartTitle(config),
       font: {
-        size: 26,
+        size: 22,
         weight: 600,
       },
       padding: {
-        top: 20,
-        bottom: 40,
+        top: 15,
+        bottom: 30,
       },
       color: '#333',
     },
@@ -180,17 +177,17 @@ export const chartOptions = (config: DataConfig): ChartOptions<'line'> => ({
       titleColor: '#333',
       bodyColor: '#333',
       titleFont: {
-        size: 16,
+        size: 14,
         weight: 500,
       },
       bodyFont: {
-        size: 14,
+        size: 13,
         weight: 500,
       },
       borderColor: 'rgba(0, 0, 0, 0.1)',
       borderWidth: 1,
-      padding: 16,
-      boxPadding: 8,
+      padding: 12,
+      boxPadding: 6,
       usePointStyle: true,
       callbacks: {
         label: function(context) {
@@ -209,7 +206,6 @@ export const chartOptions = (config: DataConfig): ChartOptions<'line'> => ({
   interaction: {
     mode: 'index',
     intersect: false,
-    // Removing animationDuration as it's not a valid property here
   },
   layout: {
     padding: {
@@ -219,17 +215,15 @@ export const chartOptions = (config: DataConfig): ChartOptions<'line'> => ({
       bottom: 15,
     },
   },
-  // Moving hover configuration to the correct location
   hover: {
     mode: 'nearest',
     intersect: false,
   },
 });
 
-export const researchData = (): FoodProductionData => {
+export const researchData = (startYear: number = 2010, count: number = 14): FoodProductionData => {
   // Fungsi untuk melakukan riset data (menghasilkan data acak yang masuk akal)
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
+  const years = Array.from({ length: count }, (_, i) => startYear + i);
   
   const generateRealisticTrend = (baseValue: number, volatility: number) => {
     return years.map((_, i) => {

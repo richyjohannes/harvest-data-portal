@@ -14,7 +14,7 @@ import {
 import { FoodProductionData, generateChartData, chartOptions, DataConfig } from '@/utils/chartUtils';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
-import { Download, TrendingUp } from 'lucide-react';
+import { Download, TrendingUp, ZoomIn } from 'lucide-react';
 
 // Register ChartJS components
 ChartJS.register(
@@ -60,28 +60,30 @@ const ProductionChart: React.FC<ProductionChartProps> = ({ data, config }) => {
   };
 
   return (
-    <div className="bg-white shadow-md rounded-xl p-4 animate-scale-in">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+    <div className="bg-white shadow-lg rounded-xl p-6 animate-scale-in border border-indigo-100">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div className="mb-3 md:mb-0">
           <h2 className="text-xl font-bold text-gray-800 flex items-center gap-1.5">
-            <TrendingUp className="text-indigo-600" size={18} />
+            <TrendingUp className="text-indigo-600" size={20} />
             Visualisasi Data
           </h2>
           <p className="text-sm text-gray-600">{config.type} pangan {config.country}</p>
         </div>
-        <button
-          onClick={downloadChart}
-          className="btn-primary flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs shadow-sm hover:shadow-md transition-all bg-indigo-600 hover:bg-indigo-700"
-        >
-          <Download size={14} />
-          <span>Unduh Grafik</span>
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={downloadChart}
+            className="btn-primary flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs shadow-sm hover:shadow-md transition-all bg-indigo-600 hover:bg-indigo-700"
+          >
+            <Download size={14} />
+            <span>Unduh Grafik</span>
+          </button>
+        </div>
       </div>
       
       <div 
         ref={chartRef} 
-        className="bg-white rounded-lg p-3 shadow-sm border border-gray-100"
-        style={{ height: '850px' }} // Increased height further
+        className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md"
+        style={{ height: '550px' }} 
       >
         <Line data={chartData} options={chartOptions(config)} />
       </div>

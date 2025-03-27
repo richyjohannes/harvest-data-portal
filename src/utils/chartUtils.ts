@@ -1,4 +1,3 @@
-
 import { ChartData, ChartOptions } from 'chart.js';
 
 export interface FoodProductionData {
@@ -13,7 +12,7 @@ export interface DataConfig {
   country: string;
 }
 
-export const FOOD_TYPES = [
+export const DEFAULT_FOOD_TYPES = [
   'Jagung',
   'Bungkil Kedelai',
   'Biji Minyak Kedelai',
@@ -47,13 +46,20 @@ export const CHART_COLORS = [
   'rgb(201, 103, 107)', // brown
   'rgb(255, 99, 132)', // red
   'rgb(54, 235, 235)', // cyan
+  'rgb(255, 205, 86)', // yellow
+  'rgb(75, 192, 120)', // teal
+  'rgb(201, 77, 168)', // pink
+  'rgb(128, 98, 214)', // lavender
+  'rgb(15, 174, 96)', // emerald
+  'rgb(221, 81, 69)', // coral
+  'rgb(77, 77, 77)', // charcoal
 ];
 
-export const getInitialData = (startYear: number = 2010, count: number = 14): FoodProductionData => {
+export const getInitialData = (startYear: number = 2010, count: number = 14, foodTypes: string[] = DEFAULT_FOOD_TYPES): FoodProductionData => {
   const years = Array.from({ length: count }, (_, i) => startYear + i);
   
   const datasets: { [key: string]: number[] } = {};
-  FOOD_TYPES.forEach(type => {
+  foodTypes.forEach(type => {
     datasets[type] = Array(years.length).fill(0);
   });
   
@@ -72,9 +78,11 @@ export const generateChartTitle = (config: DataConfig): string => {
 };
 
 export const generateChartData = (data: FoodProductionData): ChartData<'line'> => {
+  const foodTypes = Object.keys(data.datasets);
+  
   return {
     labels: data.years.map(year => year.toString()),
-    datasets: FOOD_TYPES.map((type, index) => ({
+    datasets: foodTypes.map((type, index) => ({
       label: type,
       data: data.datasets[type],
       borderColor: CHART_COLORS[index % CHART_COLORS.length],
@@ -221,27 +229,36 @@ export const chartOptions = (config: DataConfig): ChartOptions<'line'> => ({
   },
 });
 
-export const researchData = (startYear: number = 2010, count: number = 14): FoodProductionData => {
-  // Fungsi untuk melakukan riset data (menghasilkan data acak yang masuk akal)
+export const researchData = (startYear: number = 2010, count: number = 14, foodTypes: string[] = DEFAULT_FOOD_TYPES): FoodProductionData => {
+  // Function to generate research data (generate sensible random data)
   const years = Array.from({ length: count }, (_, i) => startYear + i);
   
   const generateRealisticTrend = (baseValue: number, volatility: number) => {
     return years.map((_, i) => {
-      const trend = baseValue * (1 + (i * 0.05)); // 5% pertumbuhan per tahun
-      const randomFactor = (Math.random() - 0.5) * volatility; // Faktor acak dengan volatilitas tertentu
+      const trend = baseValue * (1 + (i * 0.05)); // 5% growth per year
+      const randomFactor = (Math.random() - 0.5) * volatility; // Random factor with specified volatility
       return Math.round(trend * (1 + randomFactor));
     });
   };
   
-  const datasets: { [key: string]: number[] } = {
-    "Jagung": generateRealisticTrend(260000, 0.05),
-    "Bungkil Kedelai": generateRealisticTrend(72000, 0.08),
-    "Biji Minyak Kedelai": generateRealisticTrend(18000, 0.1),
-    "Minyak Kedelai": generateRealisticTrend(16000, 0.07),
-    "Beras": generateRealisticTrend(148000, 0.02),
-    "Gandum": generateRealisticTrend(134000, 0.03),
-    "Sorghum": generateRealisticTrend(3000, 0.12)
+  const baseValues = {
+    "Jagung": 260000,
+    "Bungkil Kedelai": 72000,
+    "Biji Minyak Kedelai": 18000,
+    "Minyak Kedelai": 16000,
+    "Beras": 148000,
+    "Gandum": 134000,
+    "Sorghum": 3000
   };
+  
+  const datasets: { [key: string]: number[] } = {};
+  
+  foodTypes.forEach(type => {
+    // Use the base value if it exists in predefined values, or generate a random base
+    const baseValue = baseValues[type as keyof typeof baseValues] || Math.round(10000 + Math.random() * 100000);
+    const volatility = 0.05 + Math.random() * 0.1; // Generate random volatility between 0.05 and 0.15
+    datasets[type] = generateRealisticTrend(baseValue, volatility);
+  });
   
   return { years, datasets };
 };

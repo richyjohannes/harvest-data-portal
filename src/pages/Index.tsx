@@ -3,14 +3,19 @@ import React, { useState, useEffect } from 'react';
 import DataInputForm from '@/components/DataInputForm';
 import ProductionChart from '@/components/ProductionChart';
 import Tutorial from '@/components/Tutorial';
-import { FoodProductionData, getInitialData, getInitialConfig, DataConfig } from '@/utils/chartUtils';
+import { 
+  FoodProductionData, 
+  getInitialData, 
+  getInitialConfig, 
+  DataConfig, 
+  DEFAULT_FOOD_TYPES 
+} from '@/utils/chartUtils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, FileSpreadsheet, BookOpen } from 'lucide-react';
 
 const Index = () => {
-  const [data, setData] = useState<FoodProductionData>(getInitialData(2010, 14));
+  const [data, setData] = useState<FoodProductionData>(getInitialData(2010, 14, DEFAULT_FOOD_TYPES));
   const [config, setConfig] = useState<DataConfig>(getInitialConfig());
-  const [showTutorial, setShowTutorial] = useState<boolean>(false);
   
   const handleDataChange = (newData: FoodProductionData) => {
     setData(newData);

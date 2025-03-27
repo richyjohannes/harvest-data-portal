@@ -83,7 +83,7 @@ const ProductionChart: React.FC<ProductionChartProps> = ({ data, config }) => {
       <div 
         ref={chartRef} 
         className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md"
-        style={{ height: '550px' }} 
+        style={{ height: '650px' }} 
       >
         <Line data={chartData} options={chartOptions(config)} />
       </div>

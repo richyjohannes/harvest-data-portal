@@ -1,10 +1,15 @@
 
-import React, { useState, useRef } from 'react';
-import { FoodProductionData, FOOD_TYPES, DATA_TYPES, COUNTRIES, DataConfig, researchData } from '@/utils/chartUtils';
+import React, { useState, useRef, useEffect } from 'react';
+import { FoodProductionData, DEFAULT_FOOD_TYPES, DATA_TYPES, COUNTRIES, DataConfig, researchData } from '@/utils/chartUtils';
 import { toast } from 'sonner';
-import { PlusCircle, MinusCircle, Save, RefreshCw, Beaker, ClipboardPaste, HelpCircle, Info } from 'lucide-react';
+import { 
+  PlusCircle, MinusCircle, Save, RefreshCw, Beaker, 
+  ClipboardPaste, HelpCircle, Info, Edit, Trash2, Plus
+} from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from '@/components/ui/table';
 
 interface DataInputFormProps {
   data: FoodProductionData;
@@ -21,7 +26,20 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
   const [pasteModalOpen, setPasteModalOpen] = useState<boolean>(false);
   const [selectedFoodType, setSelectedFoodType] = useState<string>('');
   const [pasteContent, setPasteContent] = useState<string>('');
+  const [foodTypes, setFoodTypes] = useState<string[]>(Object.keys(data.datasets));
+  const [editFoodTypeIndex, setEditFoodTypeIndex] = useState<number | null>(null);
+  const [newFoodTypeName, setNewFoodTypeName] = useState<string>('');
+  const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
+  const [addFoodTypeModalOpen, setAddFoodTypeModalOpen] = useState<boolean>(false);
+  
   const tableRef = useRef<HTMLTableElement>(null);
+  const newFoodTypeInputRef = useRef<HTMLInputElement>(null);
+  
+  useEffect(() => {
+    if (editModalOpen && editFoodTypeIndex !== null) {
+      setNewFoodTypeName(foodTypes[editFoodTypeIndex]);
+    }
+  }, [editModalOpen, editFoodTypeIndex, foodTypes]);
   
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -35,10 +53,10 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
     const newYears = Array.from({ length: count }, (_, i) => start + i);
     
     const newDatasets: { [key: string]: number[] } = {};
-    FOOD_TYPES.forEach(type => {
+    foodTypes.forEach(type => {
       newDatasets[type] = Array(count).fill(0).map((_, index) => {
-        const oldYearIndex = data.years.indexOf(start + index);
-        return oldYearIndex >= 0 ? tempData.datasets[type][oldYearIndex] : 0;
+        const oldYearIndex = tempData.years.indexOf(start + index);
+        return oldYearIndex >= 0 && tempData.datasets[type] ? tempData.datasets[type][oldYearIndex] : 0;
       });
     });
     
@@ -94,12 +112,15 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
     setTempConfig(config);
     setStartYear(data.years[0]);
     setYearCount(data.years.length);
+    setFoodTypes(Object.keys(data.datasets));
     toast.info("Form direset ke data sebelumnya");
   };
   
   const handleResearchData = () => {
-    // Use the default values (2010 with 14 years)
-    const researchedData = researchData(2010, 14);
+    // Reset to default values (2010 with 14 years)
+    const startYr = 2010;
+    const countYr = 14;
+    const researchedData = researchData(startYr, countYr, foodTypes);
     setTempData(researchedData);
     setStartYear(researchedData.years[0]);
     setYearCount(researchedData.years.length);
@@ -156,12 +177,12 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
 
   const handleMatrixPaste = (rows: string[]) => {
     // Determine if we have enough food types to handle all rows
-    const validRowCount = Math.min(rows.length, FOOD_TYPES.length);
+    const validRowCount = Math.min(rows.length, foodTypes.length);
     
     const newDatasets = { ...tempData.datasets };
     
     for (let rowIndex = 0; rowIndex < validRowCount; rowIndex++) {
-      const foodType = FOOD_TYPES[rowIndex];
+      const foodType = foodTypes[rowIndex];
       const values = rows[rowIndex].split(/[\t\s]+/).filter(val => val.trim() !== '');
       const newValues = [...tempData.datasets[foodType]];
       
@@ -207,6 +228,113 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
     if (rows.length === 0) return;
     
     handleMatrixPaste(rows);
+  };
+  
+  // Add new food type
+  const handleAddFoodType = () => {
+    if (!newFoodTypeName.trim()) {
+      toast.error("Nama jenis produksi tidak boleh kosong");
+      return;
+    }
+    
+    if (foodTypes.includes(newFoodTypeName)) {
+      toast.error("Jenis produksi sudah ada");
+      return;
+    }
+    
+    const newFoodTypes = [...foodTypes, newFoodTypeName];
+    setFoodTypes(newFoodTypes);
+    
+    // Add empty data for new food type
+    const newDatasets = { ...tempData.datasets };
+    newDatasets[newFoodTypeName] = Array(tempData.years.length).fill(0);
+    
+    setTempData({ ...tempData, datasets: newDatasets });
+    
+    setNewFoodTypeName('');
+    setAddFoodTypeModalOpen(false);
+    
+    toast.success(`Jenis produksi ${newFoodTypeName} berhasil ditambahkan`);
+  };
+  
+  // Edit food type
+  const handleEditFoodType = () => {
+    if (editFoodTypeIndex === null) return;
+    
+    if (!newFoodTypeName.trim()) {
+      toast.error("Nama jenis produksi tidak boleh kosong");
+      return;
+    }
+    
+    const oldName = foodTypes[editFoodTypeIndex];
+    
+    if (oldName === newFoodTypeName) {
+      setEditModalOpen(false);
+      return;
+    }
+    
+    if (foodTypes.includes(newFoodTypeName)) {
+      toast.error("Jenis produksi sudah ada");
+      return;
+    }
+    
+    const newFoodTypes = [...foodTypes];
+    newFoodTypes[editFoodTypeIndex] = newFoodTypeName;
+    setFoodTypes(newFoodTypes);
+    
+    // Transfer old data to new name
+    const newDatasets = { ...tempData.datasets };
+    newDatasets[newFoodTypeName] = [...newDatasets[oldName]];
+    delete newDatasets[oldName];
+    
+    setTempData({ ...tempData, datasets: newDatasets });
+    
+    setEditModalOpen(false);
+    toast.success(`Jenis produksi berhasil diubah dari ${oldName} menjadi ${newFoodTypeName}`);
+  };
+  
+  // Remove food type
+  const handleRemoveFoodType = (index: number) => {
+    if (foodTypes.length <= 1) {
+      toast.error("Minimal harus ada 1 jenis produksi");
+      return;
+    }
+    
+    const foodTypeToRemove = foodTypes[index];
+    const confirmRemove = window.confirm(`Apakah Anda yakin ingin menghapus jenis produksi "${foodTypeToRemove}"?`);
+    
+    if (!confirmRemove) return;
+    
+    const newFoodTypes = foodTypes.filter((_, i) => i !== index);
+    setFoodTypes(newFoodTypes);
+    
+    // Remove data for removed food type
+    const newDatasets = { ...tempData.datasets };
+    delete newDatasets[foodTypeToRemove];
+    
+    setTempData({ ...tempData, datasets: newDatasets });
+    
+    toast.success(`Jenis produksi ${foodTypeToRemove} berhasil dihapus`);
+  };
+  
+  // Open edit modal
+  const openEditModal = (index: number) => {
+    setEditFoodTypeIndex(index);
+    setNewFoodTypeName(foodTypes[index]);
+    setEditModalOpen(true);
+  };
+  
+  // Open add food type modal
+  const openAddFoodTypeModal = () => {
+    setNewFoodTypeName('');
+    setAddFoodTypeModalOpen(true);
+    
+    // Focus on input after modal opens
+    setTimeout(() => {
+      if (newFoodTypeInputRef.current) {
+        newFoodTypeInputRef.current.focus();
+      }
+    }, 100);
   };
 
   return (
@@ -344,19 +472,40 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
               <ClipboardPaste size={14} className="text-indigo-600" />
               <span className="font-medium text-xs text-gray-700">Data {tempConfig.type}</span>
             </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="text-xs text-indigo-600 cursor-help flex items-center gap-1">
-                    <span className="text-xs italic">Copy-paste Excel</span>
-                    <Info size={12} />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-xs">Paste langsung ke tabel untuk multi-row, atau klik ikon clipboard untuk satu baris. Semua decimal dan karakter non-angka akan dihilangkan.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-xs flex items-center gap-1 p-1 px-2 bg-indigo-100 rounded-md text-indigo-600 hover:bg-indigo-200 transition-colors"
+                      onClick={openAddFoodTypeModal}
+                    >
+                      <Plus size={14} />
+                      <span>Tambah Jenis</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Tambah jenis produksi baru</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="text-xs text-indigo-600 cursor-help flex items-center gap-1">
+                      <span className="text-xs italic">Copy-paste Excel</span>
+                      <Info size={12} />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-xs">Paste langsung ke tabel untuk multi-row, atau klik ikon clipboard untuk satu baris. Semua decimal dan karakter non-angka akan dihilangkan.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
           
           <div className="overflow-x-auto">
@@ -378,36 +527,74 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {FOOD_TYPES.map((foodType, index) => (
+                {foodTypes.map((foodType, index) => (
                   <tr key={foodType} className="hover:bg-indigo-50/30 transition-colors">
                     <td className="p-1.5 font-medium border-r border-gray-100 text-xs sticky left-0 bg-white z-10 whitespace-nowrap">
                       <div className="flex items-center justify-between">
                         <div 
                           className="px-1.5 py-0.5 rounded text-xs font-medium"
                           style={{ 
-                            backgroundColor: `rgba(${index * 40}, ${100 + index * 20}, ${200 - index * 10}, 0.1)`,
-                            color: `rgba(${index * 40}, ${100 + index * 20}, ${200 - index * 10}, 1)`
+                            backgroundColor: `rgba(${index * 20}, ${100 + index * 15}, ${200 - index * 8}, 0.1)`,
+                            color: `rgba(${index * 20}, ${100 + index * 15}, ${200 - index * 8}, 1)`
                           }}
                         >
                           {foodType}
                         </div>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={() => openPasteModal(foodType)}
-                                className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
-                                title={`Paste data Excel untuk ${foodType}`}
-                              >
-                                <ClipboardPaste size={12} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="right">
-                              <p className="text-xs">Paste data Excel untuk {foodType}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <div className="flex items-center">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => openEditModal(index)}
+                                  className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                  title={`Edit ${foodType}`}
+                                >
+                                  <Edit size={12} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                <p className="text-xs">Edit nama jenis produksi</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveFoodType(index)}
+                                  className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                  title={`Hapus ${foodType}`}
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                <p className="text-xs">Hapus jenis produksi</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => openPasteModal(foodType)}
+                                  className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                  title={`Paste data Excel untuk ${foodType}`}
+                                >
+                                  <ClipboardPaste size={12} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="right">
+                                <p className="text-xs">Paste data Excel untuk {foodType}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
                       </div>
                     </td>
                     {tempData.years.map((year, yearIndex) => (
@@ -417,7 +604,7 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
                       >
                         <input
                           type="text"
-                          value={tempData.datasets[foodType][yearIndex] || ''}
+                          value={tempData.datasets[foodType]?.[yearIndex] || ''}
                           onChange={e => handleProductionChange(foodType, yearIndex, e.target.value)}
                           className="w-full text-center px-1 py-1 border-0 bg-transparent focus:ring-1 focus:ring-indigo-300 focus:outline-none text-xs group-hover:bg-indigo-50/50"
                           min="0"
@@ -453,6 +640,7 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
         </div>
       </form>
 
+      {/* Paste Modal */}
       {pasteModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-lg shadow-xl p-5 max-w-md w-full border border-indigo-100 animate-scale-in">
@@ -489,6 +677,83 @@ const DataInputForm: React.FC<DataInputFormProps> = ({ data, config, onDataChang
                 onClick={handlePasteFromModal}
               >
                 Tempel Data
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Edit Food Type Modal */}
+      {editModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl p-5 max-w-md w-full border border-indigo-100 animate-scale-in">
+            <h3 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+              <Edit size={16} className="text-indigo-600" />
+              Edit Jenis Produksi
+            </h3>
+            <p className="text-xs text-gray-600 mb-3">
+              Ubah nama jenis produksi tanpa menghilangkan data yang sudah ada.
+            </p>
+            <Input 
+              className="w-full border rounded-md p-2 mb-3 font-medium text-sm focus:ring-indigo-300 focus:border-indigo-300 focus:outline-none"
+              placeholder="Masukkan nama baru"
+              value={newFoodTypeName}
+              onChange={(e) => setNewFoodTypeName(e.target.value)}
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <button 
+                type="button"
+                className="px-3 py-1.5 border rounded-md text-gray-700 hover:bg-gray-50 text-xs"
+                onClick={() => setEditModalOpen(false)}
+              >
+                Batal
+              </button>
+              <button 
+                type="button"
+                className="px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-xs"
+                onClick={handleEditFoodType}
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Add Food Type Modal */}
+      {addFoodTypeModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl p-5 max-w-md w-full border border-indigo-100 animate-scale-in">
+            <h3 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+              <Plus size={16} className="text-indigo-600" />
+              Tambah Jenis Produksi
+            </h3>
+            <p className="text-xs text-gray-600 mb-3">
+              Masukkan nama jenis produksi baru yang ingin ditambahkan.
+            </p>
+            <Input 
+              ref={newFoodTypeInputRef}
+              className="w-full border rounded-md p-2 mb-3 font-medium text-sm focus:ring-indigo-300 focus:border-indigo-300 focus:outline-none"
+              placeholder="Contoh: Ubi Kayu, Daging Ayam, dll."
+              value={newFoodTypeName}
+              onChange={(e) => setNewFoodTypeName(e.target.value)}
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <button 
+                type="button"
+                className="px-3 py-1.5 border rounded-md text-gray-700 hover:bg-gray-50 text-xs"
+                onClick={() => setAddFoodTypeModalOpen(false)}
+              >
+                Batal
+              </button>
+              <button 
+                type="button"
+                className="px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-xs"
+                onClick={handleAddFoodType}
+              >
+                Tambah
               </button>
             </div>
           </div>

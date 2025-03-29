@@ -1,69 +1,135 @@
-# Welcome to your Lovable project
 
-## Project info
+# Harvest Data Portal
 
-**URL**: https://lovable.dev/projects/c172332d-9c07-442b-a20b-041bdee431aa
+A modern data visualization application for agricultural production data with Excel-compatible input and dynamic charting capabilities.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Modern, responsive UI with tabbed interface
+- Copy-paste directly from Excel (supports multi-row/column data)
+- Automatic formatting of numbers (removes punctuation)
+- Dynamic production types (add, edit, remove)
+- Interactive data visualization charts
+- Reset to default data functionality
+- Comprehensive tutorial documentation
 
-**Use Lovable**
+## Local Development
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c172332d-9c07-442b-a20b-041bdee431aa) and start prompting.
+### Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- [Node.js](https://nodejs.org/) (v18 or newer)
+- npm or yarn package manager
 
-**Use your preferred IDE**
+### Getting Started
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/your-username/harvest-data-portal.git
+   cd harvest-data-portal
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+2. Install dependencies:
+   ```sh
+   npm install
+   # or
+   yarn install
+   ```
 
-Follow these steps:
+3. Start the development server:
+   ```sh
+   npm run dev
+   # or
+   yarn dev
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+4. Open your browser and navigate to:
+   ```
+   http://localhost:8080
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Deploying to GitHub Pages
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Option 1: Automatic Deployment (Recommended)
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+This project is configured with GitHub Actions for automatic deployment to GitHub Pages when changes are pushed to the main branch.
 
-**Edit a file directly in GitHub**
+1. Create a GitHub repository for your project.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+2. Push your code to the repository:
+   ```sh
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git branch -M main
+   git remote add origin https://github.com/your-username/your-repository-name.git
+   git push -u origin main
+   ```
 
-**Use GitHub Codespaces**
+3. Configure GitHub Pages:
+   - Go to your repository on GitHub
+   - Navigate to Settings > Pages
+   - Under "Source", select "GitHub Actions"
+   - The deployment will automatically start when you push to the main branch
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+4. After deployment is complete, your site will be available at:
+   ```
+   https://your-username.github.io/your-repository-name/
+   ```
 
-## What technologies are used for this project?
+### Option 2: Manual Deployment
 
-This project is built with .
+If you prefer to deploy manually or need to deploy from a local environment:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Build the project:
+   ```sh
+   npm run build
+   # or
+   yarn build
+   ```
 
-## How can I deploy this project?
+2. The build output will be in the `dist` folder. You can deploy this folder to any static site hosting service.
 
-Simply open [Lovable](https://lovable.dev/projects/c172332d-9c07-442b-a20b-041bdee431aa) and click on Share -> Publish.
+3. For GitHub Pages manual deployment:
+   ```sh
+   # Install gh-pages if you haven't already
+   npm install -g gh-pages
+   
+   # Deploy the dist folder
+   gh-pages -d dist
+   ```
 
-## I want to use a custom domain - is that possible?
+## Customization
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+### Default Values
+
+- Default year: 2010
+- Default number of years: 14
+- Default production types can be edited in the application
+
+### Resetting Data
+
+Use the "Riset Data" button to reset all input data to default values.
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Build errors**: Make sure you have the correct Node.js version (v18+).
+2. **Deployment issues**: Check if your repository is properly configured for GitHub Pages.
+3. **Excel paste not working**: Ensure you're copying from an Excel spreadsheet and not a text file.
+
+### GitHub Pages Not Updating
+
+If your GitHub Pages site is not updating after a successful workflow run:
+
+1. Check the Actions tab in your repository to verify the workflow ran successfully
+2. Ensure you've configured GitHub Pages to deploy from GitHub Actions
+3. Clear your browser cache or try in an incognito window
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

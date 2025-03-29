@@ -49,13 +49,32 @@ Aplikasi visualisasi data produksi pertanian modern dengan kemampuan input kompa
 
 ## Deployment ke GitHub Pages
 
-### Cara Deploy Otomatis (Disarankan)
+### Cara Deploy Manual (Step-by-Step Lengkap)
 
-Proyek ini dikonfigurasi dengan GitHub Actions untuk deploy otomatis ke GitHub Pages ketika perubahan di-push ke branch main.
+1. **Persiapan repositori GitHub**
+   - Buat repositori baru di GitHub (jika belum ada)
+   - Pastikan repositori memiliki nama `visualdata-richy` (untuk konsistensi dengan base path)
 
-1. Pastikan repositori GitHub Anda sudah dibuat.
+2. **Konfigurasi file `vite.config.ts`**
+   - Pastikan `base` di `vite.config.ts` sudah benar:
+     ```js
+     base: '/visualdata-richy/', // HARUS sesuai nama repositori
+     ```
+   - File terdapat di root proyek
 
-2. Push kode Anda ke repositori:
+3. **Konfigurasi `App.tsx` untuk GitHub Pages**
+   - Pastikan menggunakan `HashRouter`, bukan `BrowserRouter` di `src/App.tsx`:
+     ```jsx
+     import { HashRouter, Routes, Route } from "react-router-dom";
+     // ...
+     <HashRouter>
+       <Routes>
+         {/* ... */}
+       </Routes>
+     </HashRouter>
+     ```
+
+4. **Hubungkan dengan repositori jika belum dilakukan**
    ```sh
    git init
    git add .
@@ -65,91 +84,95 @@ Proyek ini dikonfigurasi dengan GitHub Actions untuk deploy otomatis ke GitHub P
    git push -u origin main
    ```
 
-3. Konfigurasi GitHub Pages:
-   - Buka repositori Anda di GitHub
-   - Navigasi ke Settings > Pages
-   - Di bawah "Source", pilih "GitHub Actions"
-   - Deployment akan otomatis dimulai ketika Anda push ke branch main
-
-4. Setelah deployment selesai, situs Anda akan tersedia di:
-   ```
-   https://jr-repository.github.io/visualdata-richy/
-   ```
-
-### PENTING: Troubleshooting GitHub Pages
-
-Jika halaman Anda kosong setelah deployment:
-
-1. Pastikan file `vite.config.ts` memiliki base path yang benar:
-   ```js
-   base: '/visualdata-richy/',  // HARUS sesuai dengan nama repositori Anda
-   ```
-
-2. Pastikan Anda menggunakan HashRouter di `App.tsx` bukan BrowserRouter:
-   ```jsx
-   <HashRouter>
-     <Routes>
-       {/* ... */}
-     </Routes>
-   </HashRouter>
-   ```
-
-3. Periksa tab Actions di repositori GitHub untuk memastikan workflow berjalan dengan sukses.
-
-4. Tunggu beberapa menit setelah deployment sukses, karena GitHub Pages mungkin memerlukan waktu untuk menyebarkan perubahan.
-
-5. Hapus cache browser Anda atau coba di jendela penyamaran/incognito.
-
-### Cara Deploy Manual
-
-Jika Anda ingin deploy secara manual atau perlu deploy dari lingkungan lokal:
-
-1. Build proyek:
+5. **Instal gh-pages jika belum terinstall**
    ```sh
-   npm run build
-   # atau
-   yarn build
+   npm install gh-pages --save-dev
    ```
 
-2. Output build akan berada di folder `dist`. Anda dapat deploy folder ini ke layanan hosting situs statis mana pun.
+6. **Tambahkan script deploy di package.json**
+   - Buka `package.json`
+   - Tambahkan script berikut di bagian "scripts":
+     ```json
+     "predeploy": "npm run build",
+     "deploy": "gh-pages -d dist"
+     ```
 
-3. Untuk deployment manual GitHub Pages:
+7. **Build dan deploy proyek**
    ```sh
-   # Install gh-pages jika Anda belum melakukannya
-   npm install -g gh-pages
+   npm run deploy
+   ```
+   - Perintah ini akan menjalankan build dan meng-upload folder `dist` ke branch `gh-pages`
+
+8. **Konfigurasi GitHub Pages di repositori**
+   - Buka repositori GitHub Anda
+   - Klik tab "Settings"
+   - Di sidebar kiri, klik "Pages"
+   - Di bagian "Source", pilih "Deploy from a branch"
+   - Pada dropdown branch, pilih "gh-pages" dan folder "/root"
+   - Klik "Save"
+
+9. **Verifikasi deployment**
+   - Tunggu beberapa menit setelah konfigurasi
+   - Periksa halaman GitHub Pages di URL:
+     ```
+     https://jr-repository.github.io/visualdata-richy/
+     ```
+
+10. **Cara Memperbarui Aplikasi Setelah Perubahan**
+    - Setelah melakukan perubahan kode:
+      ```sh
+      git add .
+      git commit -m "Update aplikasi"
+      git push origin main
+      npm run deploy
+      ```
+
+### PENTING: Troubleshooting GitHub Pages Halaman Kosong
+
+Jika halaman masih kosong setelah deployment:
+
+1. **Periksa Browser Console**
+   - Buka Chrome DevTools (F12)
+   - Lihat tab "Console" untuk error
+   - Perhatikan error path "404" yang mengindikasikan masalah loading aset
+
+2. **Periksa Struktur File Dist**
+   - Build lokal dengan `npm run build`
+   - Periksa folder `dist` yang dihasilkan
+   - Pastikan file `index.html` ada di root folder `dist`
+   - Periksa path aset di `index.html` sudah relatif terhadap `/visualdata-richy/`
+
+3. **Pastikan Base URL Benar di HTML**
+   - Buka file `dist/index.html` setelah build
+   - Pastikan semua path javascript dan CSS dimulai dengan `/visualdata-richy/`
+   - Contoh yang benar: `<script type="module" crossorigin src="/visualdata-richy/assets/..."></script>`
+
+4. **Tunggu Cache GitHub Pages Diperbarui**
+   - GitHub Pages mungkin membutuhkan waktu 5-10 menit untuk memperbarui cache
+   - Coba akses di browser incognito/mode penyamaran untuk menghindari cache lokal
+
+5. **Verifikasi Struktur Repository dan Branch**
+   - Periksa branch gh-pages sudah berisi file-file yang dihasilkan dari build
+   - Pastikan file-file terletak di root, bukan dalam subfolder
+
+6. **Periksa Konfigurasi GitHub Pages**
+   - Di Settings > Pages, pastikan "Source" adalah branch "gh-pages" dan folder "/ (root)"
+   - Tunggu status deployment menunjukkan "Your site is published at https://..."
+
+7. **Cara Hard Reset Jika Masih Bermasalah**
+   ```sh
+   # Hapus branch gh-pages lokal dan remote
+   git branch -D gh-pages
+   git push origin --delete gh-pages
    
-   # Deploy folder dist
-   gh-pages -d dist
+   # Deploy ulang dari awal
+   npm run build
+   npx gh-pages -d dist
    ```
 
-## Kustomisasi
-
-### Nilai Default
-
-- Tahun default: 2010
-- Jumlah tahun default: 14
-- Jenis produksi default dapat diedit di aplikasi
-
-### Reset Data
-
-Gunakan tombol "Riset Data" untuk mengembalikan semua data input ke nilai default.
-
-## Pemecahan Masalah
-
-### Masalah Umum
-
-1. **Error build**: Pastikan Anda memiliki versi Node.js yang benar (v18+).
-2. **Masalah deployment**: Periksa apakah repositori Anda dikonfigurasi dengan benar untuk GitHub Pages.
-3. **Paste Excel tidak berfungsi**: Pastikan Anda menyalin dari spreadsheet Excel dan bukan file teks.
-
-### GitHub Pages Tidak Memperbarui
-
-Jika situs GitHub Pages Anda tidak memperbarui setelah workflow berhasil dijalankan:
-
-1. Periksa tab Actions di repositori Anda untuk memverifikasi bahwa workflow berjalan dengan sukses
-2. Pastikan Anda telah mengonfigurasi GitHub Pages untuk deploy dari GitHub Actions
-3. Hapus cache browser Anda atau coba di jendela penyamaran/incognito
-4. Periksa apakah base path di vite.config.ts sudah benar: `/visualdata-richy/`
+8. **Periksa Kompatibilitas Browser**
+   - Coba buka di browser berbeda (Chrome, Firefox, Edge)
+   - Pastikan browser mendukung semua fitur yang digunakan aplikasi
 
 ## Kontribusi
 
